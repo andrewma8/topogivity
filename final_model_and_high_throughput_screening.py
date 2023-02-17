@@ -83,7 +83,7 @@ def main():
     print("clf.intercept_:",clf.intercept_)
     
     #First, map w and b to topogivities (note that the method of mapping implemented below is mathematically equivalent to
-    #the formulation described in the supplementary material of the paper.  Then, visualize these topogivities on periodic table
+    #the formulation described in the supplementary material of the paper).  Then, visualize these topogivities on periodic table
     decision_function_for_each_elt = {}
     for atomic_number in list_of_atomic_numbers_for_featurization:
         str_elt = chemistry.get_str_elt(atomic_number)
