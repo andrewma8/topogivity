@@ -1,6 +1,6 @@
 # Topogivity
 
-This repository contains the code and data underlying the machine learning part of the paper "Topogivity: A Machine-Learned Chemical Rule for Discovering Topological Materials" (https://pubs.acs.org/doi/full/10.1021/acs.nanolett.2c03307).
+This repository contains the code and data underlying the machine learning part of the following paper: "Topogivity: A Machine-Learned Chemical Rule for Discovering Topological Materials" (https://pubs.acs.org/doi/full/10.1021/acs.nanolett.2c03307).
 
 If you find the code useful, please cite the above paper.
 
