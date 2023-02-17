@@ -3,9 +3,6 @@ from pymatgen.core.composition import Composition
 from pymatgen.core.periodic_table import Element
 
 
-#Note: the old version of pymatgen only worked for elements with 1 ≤ atomic number ≤ 103, but the new version of pymatgen works for all elements.  This code is only compatible with the new version of pymatgen [TODO: put this in README istead].
-
-
 
 def get_atomic_number(str_elt):
 # takes as input a string element symbol.  Returns the atomic number.  

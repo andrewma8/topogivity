@@ -2,11 +2,9 @@ import pickle
 import random
 import numpy as np
 from pymatgen.util.plotting import periodic_table_heatmap
-
 import chemistry
 
 
-#TODO: unify the use of trivial, topological, case1, NAI, USI, etc.
 
 
 def convert_raw_string_to_processed_tuple(raw_string):
@@ -70,7 +68,8 @@ def read_and_process_ccmp_lists():
     set_of_processed_tuples_tci = process_raw_file(filename_with_path_tci)
     set_of_processed_tuples_ti = process_raw_file(filename_with_path_ti)
     
-    print("intersection of ccmp data for case3 and tci:", set_of_processed_tuples_case3.intersection(set_of_processed_tuples_tci))
+    print("intersection of ccmp data for case3 and tci:",
+                                  set_of_processed_tuples_case3.intersection(set_of_processed_tuples_tci))
     print("intersection of ccmp data for case3 and ti:", set_of_processed_tuples_case3.intersection(set_of_processed_tuples_ti))
     print("intersection of ccmp data for tci and ti:", set_of_processed_tuples_tci.intersection(set_of_processed_tuples_ti))
     
@@ -229,7 +228,7 @@ def breakdown_in_terms_of_number_of_distinct_elements_in_chemical_formula(list_o
         if num_distinct_elts > num_distinct_elts_max:
             num_distinct_elts_max = num_distinct_elts
     
-    #iterate through all the material dicts and count up the occurences [might not need this at all given we have the "###" below
+    #iterate through all the material dicts and count up the occurences
     num_distinct_elts_occurence_vector = np.zeros(num_distinct_elts_max,dtype=np.int64)
     for material_dict in list_of_material_dicts:
         num_distinct_elts = chemistry.number_of_distinct_elements_in_material_dict(material_dict)
@@ -242,7 +241,6 @@ def breakdown_in_terms_of_number_of_distinct_elements_in_chemical_formula(list_o
     
     if compute_label_percentage:
     
-        ###can make this more concise by merging with or simply encompassing the above
         print("")
         for i in range(num_distinct_elts_max):
             num_distinct_elts = i+1
@@ -278,9 +276,9 @@ def main():
                                 partition_list_of_material_dicts_by_space_group_set(list_of_material_dicts_topological_incl_rare)
     
     #elemental presence prior to removing materials containing rare elements
-    print("\nElemental presence results for set A materials prior to removal of materials containing rare elements:")
+    print("\nElemental presence for set A materials prior to removal of materials containing rare elements:")
     elemental_presence_in_data(list_of_set_A_case1_material_dicts_incl_rare+list_of_set_A_topological_material_dicts_incl_rare)
-    print("\nElemental presence results for set B materials prior to removal of materials containing rare elements:")
+    print("\nElemental presence for set B materials prior to removal of materials containing rare elements:")
     elemental_presence_in_data(list_of_set_B_case1_material_dicts_incl_rare+list_of_set_B_topological_material_dicts_incl_rare)
     
     # determine the common atomic numbers based on set A materials
@@ -293,16 +291,16 @@ def main():
     list_of_set_A_case1_material_dicts_excl_rare = remove_materials_containing_rare_elements(
                                         list_of_set_A_case1_material_dicts_incl_rare,list_of_common_atomic_numbers_in_set_A)
     list_of_set_A_topological_material_dicts_excl_rare = remove_materials_containing_rare_elements(
-                                        list_of_set_A_topological_material_dicts_incl_rare,list_of_common_atomic_numbers_in_set_A)
+                                     list_of_set_A_topological_material_dicts_incl_rare, list_of_common_atomic_numbers_in_set_A)
     list_of_set_B_case1_material_dicts_excl_rare = remove_materials_containing_rare_elements(
                                         list_of_set_B_case1_material_dicts_incl_rare,list_of_common_atomic_numbers_in_set_A)
     list_of_set_B_topological_material_dicts_excl_rare = remove_materials_containing_rare_elements(
-                                        list_of_set_B_topological_material_dicts_incl_rare,list_of_common_atomic_numbers_in_set_A)
+                                     list_of_set_B_topological_material_dicts_incl_rare, list_of_common_atomic_numbers_in_set_A)
     
     #elemental presence after removing materials containing rare elements
-    print("\nElemental presence results for set A materials after removal of materials containing rare elements:")
+    print("\nElemental presence for set A materials after removal of materials containing rare elements:")
     elemental_presence_in_data(list_of_set_A_case1_material_dicts_excl_rare+list_of_set_A_topological_material_dicts_excl_rare)
-    print("\nElemental presence results for set B materials after removal of materials containing rare elements:")
+    print("\nElemental presence for set B materials after removal of materials containing rare elements:")
     elemental_presence_in_data(list_of_set_B_case1_material_dicts_excl_rare+list_of_set_B_topological_material_dicts_excl_rare)
     
     #most common element in set A materials
@@ -317,7 +315,7 @@ def main():
         if number_of_occurences != 0:
             if number_of_occurences < least_number_of_occurences_excluding_zeros:
                 least_number_of_occurences_excluding_zeros = number_of_occurences
-    print("number of occurences of least common atomic number in set A materials",least_number_of_occurences_excluding_zeros)
+    print("number of occurences of least common atomic number in set A materials:",least_number_of_occurences_excluding_zeros)
     
     #basic dataset statistics after removing materials containing rare elements
     num_of_set_A_case1_materials = len(list_of_set_A_case1_material_dicts_excl_rare)
@@ -330,11 +328,10 @@ def main():
     print("total number of set B materials:", num_of_set_B_case1_materials+num_of_set_B_topological_materials)
     print("fraction of set B materials with case3 symmetry indicator diagnosis:",
                      num_of_set_B_topological_materials / (num_of_set_B_topological_materials+num_of_set_B_case1_materials))
-    print("")
-    print("number of negative labeled materials:", num_of_set_A_case1_materials)
+    print("\nnumber of negative labeled materials:", num_of_set_A_case1_materials)
     print("number of positive labeled materials:", num_of_set_A_topological_materials)
     print("number of discovery space materials:", num_of_set_B_case1_materials)
-    print("number of sanity check materials:", num_of_set_B_topological_materials)
+    print("number of materials for additional evaluation of model performance:", num_of_set_B_topological_materials)
     
     #frequency visualization for set A materials after removing materials containing rare elements
     visualization_of_frequencies(list_of_set_A_case1_material_dicts_excl_rare,
@@ -346,10 +343,9 @@ def main():
                         list_of_set_A_case1_material_dicts_excl_rare + list_of_set_A_topological_material_dicts_excl_rare)
     print("\n\nBREAKDOWNS FOR DISCOVERY SPACE:")
     breakdown_in_terms_of_number_of_distinct_elements_in_chemical_formula(list_of_set_B_case1_material_dicts_excl_rare,False)
-    print("\n\nBREAKDOWNS FOR SANITY CHECK:")
+    print("\n\nBREAKDOWNS FOR MATERIALS USED IN ADDITIONAL EVALUATION OF MODEL PERFORMANCE:")
     breakdown_in_terms_of_number_of_distinct_elements_in_chemical_formula(
                                                                     list_of_set_B_topological_material_dicts_excl_rare,False)
-    
     
     # create nested cv splits
     num_splits = 11
@@ -357,37 +353,30 @@ def main():
                 list_of_set_A_case1_material_dicts_excl_rare, list_of_set_A_topological_material_dicts_excl_rare, num_splits)
     
     #save results
-    save_processed_data = True
-    if save_processed_data:
-        
-        set_B_data = {}
-        set_B_data["case1_material_dicts"] = list_of_set_B_case1_material_dicts_excl_rare
-        set_B_data["case3_material_dicts"] = list_of_set_B_topological_material_dicts_excl_rare
-        
-        featurization_data = {}
-        featurization_data["list_of_atomic_numbers_for_featurization"] = list_of_common_atomic_numbers_in_set_A
-        featurization_data["atomic_number_to_drop"] = most_common_atomic_number_in_set_A_materials
-        
-        filename_with_path_for_set_A_data = "processed_data/set_A_data.pkl"
-        output_for_set_A = open(filename_with_path_for_set_A_data, "wb")
-        pickle.dump(list_of_lists_of_material_dicts_for_nested_cv, output_for_set_A, pickle.HIGHEST_PROTOCOL)
-        output_for_set_A.close()
-        
-        filename_with_path_for_set_B_data = "processed_data/set_B_data.pkl"
-        output_for_set_B = open(filename_with_path_for_set_B_data, "wb")
-        pickle.dump(set_B_data, output_for_set_B, pickle.HIGHEST_PROTOCOL)
-        output_for_set_B.close()
-        
-        filename_with_path_for_featurization_data = "processed_data/featurization_data.pkl"
-        output_for_featurization = open(filename_with_path_for_featurization_data, "wb")
-        pickle.dump(featurization_data, output_for_featurization, pickle.HIGHEST_PROTOCOL)
-        output_for_featurization.close()
-        
-        print("\nProcessed data SAVED\n")
-        
-    else:
-        print("\nProcessed data NOT SAVED\n")
     
+    set_B_data = {}
+    set_B_data["case1_material_dicts"] = list_of_set_B_case1_material_dicts_excl_rare
+    set_B_data["case3_material_dicts"] = list_of_set_B_topological_material_dicts_excl_rare
+
+    featurization_data = {}
+    featurization_data["list_of_atomic_numbers_for_featurization"] = list_of_common_atomic_numbers_in_set_A
+    featurization_data["atomic_number_to_drop"] = most_common_atomic_number_in_set_A_materials
+
+    filename_with_path_for_set_A_data = "processed_data/set_A_data.pkl"
+    output_for_set_A = open(filename_with_path_for_set_A_data, "wb")
+    pickle.dump(list_of_lists_of_material_dicts_for_nested_cv, output_for_set_A, pickle.HIGHEST_PROTOCOL)
+    output_for_set_A.close()
+
+    filename_with_path_for_set_B_data = "processed_data/set_B_data.pkl"
+    output_for_set_B = open(filename_with_path_for_set_B_data, "wb")
+    pickle.dump(set_B_data, output_for_set_B, pickle.HIGHEST_PROTOCOL)
+    output_for_set_B.close()
+
+    filename_with_path_for_featurization_data = "processed_data/featurization_data.pkl"
+    output_for_featurization = open(filename_with_path_for_featurization_data, "wb")
+    pickle.dump(featurization_data, output_for_featurization, pickle.HIGHEST_PROTOCOL)
+    output_for_featurization.close()
+        
 
 
 if __name__ == '__main__':

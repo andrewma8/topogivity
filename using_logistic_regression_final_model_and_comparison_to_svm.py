@@ -2,17 +2,14 @@ import numpy as np
 import pickle
 import matplotlib.pyplot as plt
 from pymatgen.util.plotting import periodic_table_heatmap
-
+from sklearn.linear_model import LogisticRegression
 import chemistry
 import material_representation
-import model
 import metrics
 
-from sklearn.linear_model import LogisticRegression
 
-    
+
 def main():
-    
     
     # load data
     with open('processed_data/set_A_data.pkl', 'rb') as f:
@@ -42,12 +39,12 @@ def main():
     #compute retrain metrics and print them
     retrain_accuracy, retrain_recall, retrain_precision, retrain_F1 = metrics.compute_all_metrics(
                                                                 vector_of_labels_for_retrain, predicted_labels_on_retrain_inputs)
-    print("\nretrain_accuracy: ", retrain_accuracy)
-    print("retrain_recall: ", retrain_recall)
-    print("retrain_precision: ", retrain_precision)
-    print("retrain_F1: ", retrain_F1)
+    print("\nretrain_accuracy:", retrain_accuracy)
+    print("retrain_recall:", retrain_recall)
+    print("retrain_precision:", retrain_precision)
+    print("retrain_F1:", retrain_F1)
     
-    #map to topogivities from logistic regression
+    #map the logistic regression w and b to the logistic regression topogivities
     tau_logistic_for_each_elt = {}
     for atomic_number in list_of_atomic_numbers_for_featurization:
         str_elt = chemistry.get_str_elt(atomic_number)
@@ -73,17 +70,11 @@ def main():
     vector_of_tau_logistic_in_order_of_atomic_number = np.array(list_of_tau_logistic_in_order_of_atomic_number)
     vector_of_tau_svm_in_order_of_atomic_number = np.array(list_of_tau_svm_in_order_of_atomic_number)
     
-    #plot tau_logistic vs tau_svm
-    plt.scatter(vector_of_tau_svm_in_order_of_atomic_number,vector_of_tau_logistic_in_order_of_atomic_number)
-    plt.xlabel("topogivity learned using linear SVM")
-    plt.ylabel("topogivity learned using logistic regression")
-    plt.show()
-    
     #determine |tau_E|_max for logistic regression tau_E's and for svm tau_E's; rename variables to reflect it's max magnitude
     tau_logistic_max = np.max(np.abs(vector_of_tau_logistic_in_order_of_atomic_number))
     tau_svm_max = np.max(np.abs(vector_of_tau_svm_in_order_of_atomic_number))
-    print("tau_logistic_max: ", tau_logistic_max)
-    print("tau_svm_max: ", tau_svm_max)
+    print("tau_logistic_max:", tau_logistic_max)
+    print("tau_svm_max:", tau_svm_max)
     
     # vector of tau_E'/|tau_E|_max for logistic and svm
     normalized_vector_of_tau_logistic_in_order_of_atomic_number =\
@@ -92,8 +83,8 @@ def main():
                                     vector_of_tau_svm_in_order_of_atomic_number / tau_svm_max
     plt.scatter(normalized_vector_of_tau_svm_in_order_of_atomic_number,
                                 normalized_vector_of_tau_logistic_in_order_of_atomic_number,s=11)
-    plt.xlabel("normalized topogivity from linear SVM")
-    plt.ylabel("normalized topogivity from logistic regression")
+    plt.xlabel("normalized topogivity using linear SVM")
+    plt.ylabel("normalized topogivity using logistic regression")
     plt.grid()
     plt.show()
     

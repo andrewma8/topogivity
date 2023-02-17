@@ -1,11 +1,10 @@
 import numpy as np
 import pickle
-import matplotlib.pyplot as plt
-
+from sklearn.linear_model import LogisticRegression
 import material_representation
 import metrics
 
-from sklearn.linear_model import LogisticRegression
+
     
 def main():
     
@@ -82,43 +81,43 @@ def main():
     
     mean_train_accuracy = np.mean(train_accuracy_for_each_split)
     std_train_accuracy = np.std(train_accuracy_for_each_split,ddof=1)
-    print("mean train accuracy: ", mean_train_accuracy)
-    print("std train accuracy: ", std_train_accuracy)
+    print("mean train accuracy:", mean_train_accuracy)
+    print("std train accuracy:", std_train_accuracy)
     
     mean_train_recall = np.mean(train_recall_for_each_split)
     std_train_recall = np.std(train_recall_for_each_split,ddof=1)
-    print("mean train recall: ", mean_train_recall)
-    print("std train recall: ", std_train_recall)
+    print("mean train recall:", mean_train_recall)
+    print("std train recall:", std_train_recall)
     
     mean_train_precision = np.mean(train_precision_for_each_split)
     std_train_precision = np.std(train_precision_for_each_split,ddof=1)
-    print("mean train precision: ", mean_train_precision)
-    print("std train precision: ", std_train_precision)
+    print("mean train precision:", mean_train_precision)
+    print("std train precision:", std_train_precision)
     
     mean_train_F1 = np.mean(train_F1_for_each_split)
     std_train_F1 = np.std(train_F1_for_each_split,ddof=1)
-    print("mean train F1: ", mean_train_F1)
-    print("std train F1: ", std_train_F1)
+    print("mean train F1:", mean_train_F1)
+    print("std train F1:", std_train_F1)
     
     mean_test_accuracy = np.mean(test_accuracy_for_each_split)
     std_test_accuracy = np.std(test_accuracy_for_each_split,ddof=1)
-    print("\nmean test accuracy: ", mean_test_accuracy)
-    print("std test accuracy: ", std_test_accuracy)
+    print("\nmean test accuracy:", mean_test_accuracy)
+    print("std test accuracy:", std_test_accuracy)
     
     mean_test_recall = np.mean(test_recall_for_each_split)
     std_test_recall = np.std(test_recall_for_each_split,ddof=1)
-    print("mean test recall: ", mean_test_recall)
-    print("std test recall: ", std_test_recall)
+    print("mean test recall:", mean_test_recall)
+    print("std test recall:", std_test_recall)
     
     mean_test_precision = np.mean(test_precision_for_each_split)
     std_test_precision = np.std(test_precision_for_each_split,ddof=1)
-    print("mean test precision: ", mean_test_precision)
-    print("std test precision: ", std_test_precision)
+    print("mean test precision:", mean_test_precision)
+    print("std test precision:", std_test_precision)
     
     mean_test_F1 = np.mean(test_F1_for_each_split)
     std_test_F1 = np.std(test_F1_for_each_split,ddof=1)
-    print("mean test F1: ", mean_test_F1)
-    print("std test F1: ", std_test_F1)
+    print("mean test F1:", mean_test_F1)
+    print("std test F1:", std_test_F1)
     
     
 if __name__ == '__main__':

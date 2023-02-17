@@ -1,13 +1,36 @@
 import numpy as np
 import pickle
-import matplotlib.pyplot as plt
 from pymatgen.util.plotting import periodic_table_heatmap
-
 import chemistry
 import material_representation
 import model
 import metrics
 
+
+
+def create_txt_file_containing_materials_with_decision_function_geq_thresh(list_of_material_dicts, vector_of_decision_function_values, threshold_value, name_of_txt_file):
+#takes as input a list of material dicts, a corresponding vector containing the decision function values for that list of material dicts, a threshold value, and a string that is the name of the txt file to create.  Creates a txt file that contains only those materials with decision function value ≥ the threshold value.  (The entries in this txt file are sorted by decision function value.)
+    
+    indices_that_would_sort_high2low = np.flip(np.argsort(vector_of_decision_function_values))
+    num_of_materials_with_decision_function_geq_thresh = np.sum(vector_of_decision_function_values >= threshold_value)
+    
+    sorted_list_of_geq_threshold_materials_w_decision_function_writable = []
+    for i in range(num_of_materials_with_decision_function_geq_thresh):
+        index = indices_that_would_sort_high2low[i]
+        decision_function_value = vector_of_decision_function_values[index]
+        material_dict = list_of_material_dicts[index]
+        space_group = material_dict["space_group"]
+        reduced_formula = material_dict["reduced_formula"]
+        str_form_of_material_and_decision_function = \
+                        str(space_group) + ", " + reduced_formula + ", " + str(decision_function_value) + "\n"
+        sorted_list_of_geq_threshold_materials_w_decision_function_writable.append(str_form_of_material_and_decision_function)
+
+    filename_with_path_for_materials_geq_threshold = "results/" + name_of_txt_file
+    f = open(filename_with_path_for_materials_geq_threshold, "w")
+    f.writelines(sorted_list_of_geq_threshold_materials_w_decision_function_writable)
+    f.close()
+
+        
     
 def main():
     
@@ -32,7 +55,7 @@ def main():
                         list_of_material_dicts_for_reretrain, list_of_atomic_numbers_for_featurization, atomic_number_to_drop)
     
     #convert set B data into matrix and vector forms
-    matrix_of_inputs_for_sanity_check, _ = \
+    matrix_of_inputs_for_additional_evaluation, _ = \
                 material_representation.build_matrix_of_inputs_and_vector_of_labels(
                         list_of_set_B_case3_material_dicts, list_of_atomic_numbers_for_featurization, atomic_number_to_drop)
     matrix_of_inputs_for_discovery, _ = \
@@ -44,7 +67,7 @@ def main():
         selected_gamma = pickle.load(f)
     print("\nselected_gamma:",selected_gamma)
     
-    #reretrain on all of set A
+    #reretrain on all of set A to obtain the final model
     clf = model.create_instance_of_linear_SVC_using_gamma_and_N(selected_gamma,len(vector_of_labels_for_reretrain))
     clf.fit(matrix_of_inputs_for_reretrain,vector_of_labels_for_reretrain)
     predicted_labels_on_reretrain_inputs = clf.predict(matrix_of_inputs_for_reretrain)
@@ -59,7 +82,8 @@ def main():
     print("\nclf.coef_:",clf.coef_)
     print("clf.intercept_:",clf.intercept_)
     
-    #visualization
+    #First, map w and b to topogivities (note that the method of mapping implemented below is mathematically equivalent to
+    #the formulation described in the supplementary material of the paper).  Then, visualize these topogivities on periodic table
     decision_function_for_each_elt = {}
     for atomic_number in list_of_atomic_numbers_for_featurization:
         str_elt = chemistry.get_str_elt(atomic_number)
@@ -67,79 +91,50 @@ def main():
                                         str_elt,list_of_atomic_numbers_for_featurization,atomic_number_to_drop)
         decision_function_for_this_elt = clf.decision_function(vec_elt.reshape(-1,len(vec_elt)))
         decision_function_for_each_elt[str_elt] = decision_function_for_this_elt[0]
-    periodic_table_heatmap(decision_function_for_each_elt, cbar_label="f(v_E; w,b)",
-                                                               show_plot=True,cmap="bwr",cmap_range=(-8,8),value_format='%.3f')
+    periodic_table_heatmap(decision_function_for_each_elt, cbar_label="topogivity",
+                                                           show_plot=True,cmap="bwr",cmap_range=(-8,8),value_format='%.3f')
     
-    #sanity check on set B case 3 materials
-    predicted_labels_on_sanity_check_inputs = clf.predict(matrix_of_inputs_for_sanity_check)
-    num_of_sanity_check_samples = len(predicted_labels_on_sanity_check_inputs)
-    print("\nnumber of sanity check samples:", num_of_sanity_check_samples)
-    print("fraction of sanity check samples classified as topological:", 
-                                                  np.sum(predicted_labels_on_sanity_check_inputs) / num_of_sanity_check_samples)
+    #save learned topogivities
+    filename_with_path_for_learned_topogivities = "results/learned_topogivities_svm.pkl"
+    output_for_learned_topogivities = open(filename_with_path_for_learned_topogivities, "wb")
+    pickle.dump(decision_function_for_each_elt, output_for_learned_topogivities, pickle.HIGHEST_PROTOCOL)
+    output_for_learned_topogivities.close()
     
-    #discovery on set B case 1 materials
+    #additional evaluation of model peformance on set B case 3 materials
+    predicted_labels_on_additional_evaluation_inputs = clf.predict(matrix_of_inputs_for_additional_evaluation)
+    num_of_additional_evaluation_samples = len(predicted_labels_on_additional_evaluation_inputs)
+    print("\nnumber of additional evaluation samples:", num_of_additional_evaluation_samples)
+    print("fraction of additional evaluation samples classified as topological:", 
+                                np.sum(predicted_labels_on_additional_evaluation_inputs) / num_of_additional_evaluation_samples)
+    
+    #applying the model to set B case 1 materials (i.e., the discovery space)
     decision_function_values_on_discovery_inputs = clf.decision_function(matrix_of_inputs_for_discovery)
     num_of_discovery_inputs_with_decision_function_geq_1 = np.sum(decision_function_values_on_discovery_inputs >= 1)
     num_of_discovery_inputs_with_decision_function_geq_0 = np.sum(decision_function_values_on_discovery_inputs >= 0)
-    print("number of discovery inputs with decision function value greater than or equal to 1.0:",
-                                                          num_of_discovery_inputs_with_decision_function_geq_1)
-    print("number of discovery inputs with decision function value greater than or equal to 0.0:",
-                                                          num_of_discovery_inputs_with_decision_function_geq_0)
-    indices_that_would_sort_high2low = np.flip(np.argsort(decision_function_values_on_discovery_inputs))
+    print("\nnumber of discovery space materials with g(M) ≥ 1.0:", num_of_discovery_inputs_with_decision_function_geq_1)
+    print("number of discovery space materials with g(M) ≥ 0.0:", num_of_discovery_inputs_with_decision_function_geq_0)
     
-    #print discovered materials that the model is confident about (i.e. those with decision function geq 1)
-    for i in range(num_of_discovery_inputs_with_decision_function_geq_1):
-        print("\nrank:",i+1)
-        index = indices_that_would_sort_high2low[i]
-        print("list_of_set_B_case1_material_dicts[index]:",list_of_set_B_case1_material_dicts[index])
-        print("decision_function_values_on_discovery_inputs[index]:",decision_function_values_on_discovery_inputs[index])
+    #create the txt file containing the discovery space materials with g(M) ≥ 1
+    create_txt_file_containing_materials_with_decision_function_geq_thresh(list_of_set_B_case1_material_dicts,
+                     decision_function_values_on_discovery_inputs, 1.0, "high_confidence_predictions_in_discovery_space.txt")
     
-    write_results_to_txt = True
+    #create a list of material dicts that is just the subset of the labeled data that has trivial labels
+    list_of_material_dicts_with_trivial_label = []
+    for material_dict in list_of_material_dicts_for_reretrain:
+        if material_dict["label"] == 0:
+            list_of_material_dicts_with_trivial_label.append(material_dict)
     
-    if write_results_to_txt:
+    #decision function values of the final model (which was fit using the entire labeled dataset) on the subset of the labeled
+    #dataset that has trivial labels
+    matrix_of_inputs_for_materials_with_trivial_label, _ = \
+            material_representation.build_matrix_of_inputs_and_vector_of_labels(
+                    list_of_material_dicts_with_trivial_label, list_of_atomic_numbers_for_featurization, atomic_number_to_drop)
+    decision_function_values_on_materials_with_trivial_label = clf.decision_function(
+                                                                    matrix_of_inputs_for_materials_with_trivial_label)
     
-        #put all of the case1 set B materials into a form that's writeable to a txt file
-        sorted_list_of_discovery_inputs_w_decision_function_writable = []
-        for i in range(len(indices_that_would_sort_high2low)):
-            index = indices_that_would_sort_high2low[i]
-            decision_function_value = decision_function_values_on_discovery_inputs[index]
-            material_dict = list_of_set_B_case1_material_dicts[index]
-            space_group = material_dict["space_group"]
-            reduced_formula = material_dict["reduced_formula"]
-            str_form_of_material_and_decision_function = \
-                            str(space_group) + ", " + reduced_formula + ", " + str(decision_function_value) + "\n"
-            sorted_list_of_discovery_inputs_w_decision_function_writable.append(str_form_of_material_and_decision_function)
-
-        #make a text file that's all set B case 1 materials, sorted by decision function
-        filename_with_path_all_discovery_inputs = "results/all_decision_function_values.txt"
-        f = open(filename_with_path_all_discovery_inputs, "w")
-        f.writelines(sorted_list_of_discovery_inputs_w_decision_function_writable)
-        f.close()
-        
-        #make an text file that's just the set B case 1 materials with decision function above 1.0, sorted by decision function
-        confident_sorted_list_of_discovery_inputs_w_decision_function_writable = \
-            sorted_list_of_discovery_inputs_w_decision_function_writable[:num_of_discovery_inputs_with_decision_function_geq_1]
-        filename_with_path_confidently_topological_discovery_inputs = "results/all_confident_predictions.txt"
-        f = open(filename_with_path_confidently_topological_discovery_inputs, "w")
-        f.writelines(confident_sorted_list_of_discovery_inputs_w_decision_function_writable)
-        f.close()
-        
-        print("Results were written to txt files")
-    
-    else:
-        print("Results were NOT written to txt files")
-        
-        
-    save_learned_topogivities = True
-    
-    if save_learned_topogivities:
-        filename_with_path_for_learned_topogivities = "results/learned_topogivities_svm.pkl"
-        output_for_learned_topogivities = open(filename_with_path_for_learned_topogivities, "wb")
-        pickle.dump(decision_function_for_each_elt, output_for_learned_topogivities, pickle.HIGHEST_PROTOCOL)
-        output_for_learned_topogivities.close()
-        print("\nLearned topogivities SAVED")
-    else:
-        print("\nLearned topogivities NOT SAVED")
+    #create a txt file containing the subset of the trivial label materials that have g(M) ≥ 1
+    create_txt_file_containing_materials_with_decision_function_geq_thresh(list_of_material_dicts_with_trivial_label,
+         decision_function_values_on_materials_with_trivial_label, 1.0, "trivial_label_materials_that_have_g_of_M_geq_1.txt")
     
     
     

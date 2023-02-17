@@ -1,7 +1,5 @@
 import numpy as np
 from pymatgen.core.composition import Composition
-import pickle
-
 import chemistry
 
 
@@ -24,7 +22,7 @@ def convert_element_to_vector_rep(str_elt,list_of_atomic_numbers_for_featurizati
 
 
 def convert_chemical_formula_to_vector_rep(str_chemical_formula,list_of_atomic_numbers_for_featurization,atomic_number_to_drop):
-#returns vector represesentation of the material, which is defined as the weighted average of the element vectors.  The weighted average is with respect to the subscripts in the chemical formula
+#Returns vector represesentation of the material, which is implemented as the weighted average of the element vectors.  The weighted average is with respect to the subscripts in the chemical formula.  Note that this is mathematically equivalent to the formulation described in the supplementary material of the paper.
     
     chemical_comp = Composition(str_chemical_formula)
     normalized_chemical_comp_el_amt_dict = chemical_comp.fractional_composition.get_el_amt_dict()

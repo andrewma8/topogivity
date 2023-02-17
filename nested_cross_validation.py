@@ -1,7 +1,6 @@
 import numpy as np
 import pickle
 import matplotlib.pyplot as plt
-
 import material_representation
 import metrics
 import model
@@ -9,7 +8,7 @@ import model
 
 
 def compute_inner_cross_val_scores_for_fixed_gamma(list_of_matrices_of_inputs_for_inner_cv, list_of_vectors_of_labels_for_inner_cv, gamma):
-#does inner cv for a fixed gamma.  I.e., does train and validate for each of the possible splits, and computes the train and validation metrics.  Returns all of the important train and validation metrics in a dict (i.e., does not aggregate them, just returns the value of each metric for every single split)
+#does inner cv for a fixed gamma.  I.e., does train and validate for each of the possible splits, and computes the train and validation metrics.  Returns the train and validation metrics in a dict (i.e., does not aggregate them, just returns the value of each metric for every single split)
     
     num_folds_for_inner_cv = len(list_of_matrices_of_inputs_for_inner_cv)
     
@@ -294,17 +293,11 @@ def main():
     median_selected_gamma = np.median(selected_gamma_for_each_split)
     print("median selected gamma:", median_selected_gamma)
     
-    save_median_selected_gamma = True
-    
-    if save_median_selected_gamma:
-        filename_with_path_for_median_selected_gamma = "results/median_selected_gamma.pkl"
-        output_for_median_selected_gamma = open(filename_with_path_for_median_selected_gamma, "wb")
-        pickle.dump(median_selected_gamma, output_for_median_selected_gamma, pickle.HIGHEST_PROTOCOL)
-        output_for_median_selected_gamma.close()
-        print("\nmedian selected gamma SAVED")
-    else:
-        print("\nmedian selected gamma NOT SAVED")
-    
+    #save median gamma
+    filename_with_path_for_median_selected_gamma = "results/median_selected_gamma.pkl"
+    output_for_median_selected_gamma = open(filename_with_path_for_median_selected_gamma, "wb")
+    pickle.dump(median_selected_gamma, output_for_median_selected_gamma, pickle.HIGHEST_PROTOCOL)
+    output_for_median_selected_gamma.close()
     
     #ind we just need for plotting bar graph
     ind = np.arange(0,len(mean_test_frac_ground_truth_topological_for_each_decision_function_bin))

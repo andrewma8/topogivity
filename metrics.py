@@ -2,6 +2,7 @@ import numpy as np
 import material_representation
 import chemistry
 
+
     
 def compute_confusion_matrix(ground_truth_labels, predicted_labels):
 #computes the number of true positive, number of false positives, number of false negatives, and number of true negatives; where positive classification means topological
@@ -119,6 +120,7 @@ def compute_frac_ground_truth_topological_for_each_decision_function_bin(ground_
 
 
 def compute_balanced_accuracy(ground_truth_labels, predicted_labels):
+# computes the balanced accuracy given a vector of ground truth labels and a vector of predicted labels
     
     if len(ground_truth_labels) != len(predicted_labels):
         raise
@@ -132,23 +134,32 @@ def compute_balanced_accuracy(ground_truth_labels, predicted_labels):
 
 
 
-def balanced_accuracy_for_materials_with_given_number_of_distinct_elements(list_of_material_dicts, clf, list_of_atomic_numbers_for_featurization, atomic_number_to_drop, num_distinct_elements):
-#a method which given a list of material dicts and the fitted model and the featurization info computes the balanced accuracy for subset with given number of distinct elements.
-
+def predicted_labels_and_ground_truth_labels_for_materials_with_given_number_of_distinct_elements(list_of_material_dicts, clf, list_of_atomic_numbers_for_featurization, atomic_number_to_drop, num_distinct_elements):
+#takes as input a list of material dicts, a fitted model, featurization info, and a given number of distinct elements.  Returns two vectors: (1) the predicted labels on the subset of materials that have the given number of distinct elements and (2) the ground truth labels for that same subset of materials
+    
     list_of_material_dicts_with_given_number_of_distinct_elements =\
             chemistry.material_dicts_with_given_number_of_distinct_elements(list_of_material_dicts, num_distinct_elements)
     
-    matrix_of_inputs_with_given_number_of_distinct_elements, vector_of_labels_with_given_number_of_distinct_elements =\
+    matrix_of_inputs_with_given_number_of_distinct_elements, ground_truth_with_given_number_of_distinct_elements =\
             material_representation.build_matrix_of_inputs_and_vector_of_labels(
                 list_of_material_dicts_with_given_number_of_distinct_elements, list_of_atomic_numbers_for_featurization,
                                                                                                         atomic_number_to_drop)
     
-    predicted_labels_on_inputs_with_given_number_of_distinct_elements = clf.predict(
+    predictions_on_inputs_with_given_number_of_distinct_elements = clf.predict(
                                                             matrix_of_inputs_with_given_number_of_distinct_elements)
     
+    return predictions_on_inputs_with_given_number_of_distinct_elements, ground_truth_with_given_number_of_distinct_elements
+
+
+def balanced_accuracy_for_materials_with_given_number_of_distinct_elements(list_of_material_dicts, clf, list_of_atomic_numbers_for_featurization, atomic_number_to_drop, num_distinct_elements):
+#a method which given a list of material dicts and the fitted model and the featurization info computes the balanced accuracy for subset with given number of distinct elements.
+
+    predicted_labels_on_subset, ground_truth_labels_on_subset =\
+        predicted_labels_and_ground_truth_labels_for_materials_with_given_number_of_distinct_elements(list_of_material_dicts,
+                                  clf, list_of_atomic_numbers_for_featurization, atomic_number_to_drop, num_distinct_elements)
+    
     balanced_accuracy_for_subset_with_given_number_of_distinct_elements =\
-                                    compute_balanced_accuracy(vector_of_labels_with_given_number_of_distinct_elements,
-                                                          predicted_labels_on_inputs_with_given_number_of_distinct_elements)
+                                    compute_balanced_accuracy(ground_truth_labels_on_subset, predicted_labels_on_subset)
     
     return balanced_accuracy_for_subset_with_given_number_of_distinct_elements
 
@@ -156,21 +167,12 @@ def balanced_accuracy_for_materials_with_given_number_of_distinct_elements(list_
 
 def accuracy_for_materials_with_given_number_of_distinct_elements(list_of_material_dicts, clf, list_of_atomic_numbers_for_featurization, atomic_number_to_drop, num_distinct_elements):
 #a method which given a list of material dicts and the fitted model and the featurization info computes the accuracy for subset with given number of distinct elements.
-#TODO: IN FUTURE VERSION OF CODE, MERGE THIS WITH THE ABOVE METHOD
 
-    list_of_material_dicts_with_given_number_of_distinct_elements =\
-            chemistry.material_dicts_with_given_number_of_distinct_elements(list_of_material_dicts, num_distinct_elements)
-    
-    matrix_of_inputs_with_given_number_of_distinct_elements, vector_of_labels_with_given_number_of_distinct_elements =\
-            material_representation.build_matrix_of_inputs_and_vector_of_labels(
-                list_of_material_dicts_with_given_number_of_distinct_elements, list_of_atomic_numbers_for_featurization,
-                                                                                                        atomic_number_to_drop)
-    
-    predicted_labels_on_inputs_with_given_number_of_distinct_elements = clf.predict(
-                                                            matrix_of_inputs_with_given_number_of_distinct_elements)
+    predicted_labels_on_subset, ground_truth_labels_on_subset =\
+        predicted_labels_and_ground_truth_labels_for_materials_with_given_number_of_distinct_elements(list_of_material_dicts,
+                                  clf, list_of_atomic_numbers_for_featurization, atomic_number_to_drop, num_distinct_elements)
     
     accuracy_for_subset_with_given_number_of_distinct_elements, _, _, _ =\
-                    compute_all_metrics(vector_of_labels_with_given_number_of_distinct_elements,
-                                                predicted_labels_on_inputs_with_given_number_of_distinct_elements)
+                    compute_all_metrics(ground_truth_labels_on_subset, predicted_labels_on_subset)
     
     return accuracy_for_subset_with_given_number_of_distinct_elements
