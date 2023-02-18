@@ -230,15 +230,15 @@ def main():
         test_four_elt_subset_acc = metrics.accuracy_for_materials_with_given_number_of_distinct_elements(
                     list_of_material_dicts_for_test, clf, list_of_atomic_numbers_for_featurization, atomic_number_to_drop, 4)
         
-        #add the test balanced accuracy results (both overall and subsets) to the dict that already contains train, results, val
-        # results, and the rest of the test results
+        #add the test balanced accuracy results (both overall and subsets) to the dict that already contains train results,
+        #validation results, retrain results, and the rest of the test results
         results_for_best_gamma["test_balanced_acc"] = test_balanced_acc
         results_for_best_gamma["test_one_elt_subset_balanced_acc"] = test_one_elt_subset_balanced_acc
         results_for_best_gamma["test_two_elt_subset_balanced_acc"] = test_two_elt_subset_balanced_acc
         results_for_best_gamma["test_three_elt_subset_balanced_acc"] = test_three_elt_subset_balanced_acc
         results_for_best_gamma["test_four_elt_subset_balanced_acc"] = test_four_elt_subset_balanced_acc
         
-        # add the accuracy on subset results to that dict as well
+        #add the accuracy on subset results to that dict as well
         results_for_best_gamma["test_one_elt_subset_acc"] = test_one_elt_subset_acc
         results_for_best_gamma["test_two_elt_subset_acc"] = test_two_elt_subset_acc
         results_for_best_gamma["test_three_elt_subset_acc"] = test_three_elt_subset_acc
@@ -252,9 +252,8 @@ def main():
         print("results_for_best_gamma:")
         print(results_for_best_gamma)
     
-    # compute some stuff, and print results
+    # compute means and stdevs, and print results
     print("\n\n\nAGGREGATED RESULTS FOR THE ENTIRE NESTED CROSS-VALIDATION:")
-    
     for key in ["retrain_accuracy", "retrain_recall", "retrain_precision", "retrain_F1",
                     "test_accuracy", "test_recall", "test_precision", "test_F1",
                         "test_frac_classified_as_topological", "test_precision_using_threshold", "test_frac_above_threshold",
@@ -262,14 +261,23 @@ def main():
                                "test_three_elt_subset_balanced_acc", "test_four_elt_subset_balanced_acc",
                                    "test_one_elt_subset_acc", "test_two_elt_subset_acc", "test_three_elt_subset_acc",
                                        "test_four_elt_subset_acc"]:
-        result_for_each_split = np.zeros(num_folds_for_nested_cv)
+        list_form_result_for_each_split = [] # only contains the values that are defined (i.e., if np.NaN occurs, then exclude)
+        num_folds_for_which_this_metric_was_undefined = 0
         for i in range(num_folds_for_nested_cv):
-            result_for_each_split[i] = comprehensive_results_for_nested_cv[i][key]
+            result_for_this_split = comprehensive_results_for_nested_cv[i][key]
+            if result_for_this_split is np.NaN:
+                num_folds_for_which_this_metric_was_undefined += 1
+            else:
+                list_form_result_for_each_split.append(result_for_this_split)
+        result_for_each_split = np.array(list_form_result_for_each_split)
         mean_result = np.mean(result_for_each_split)
         std_result = np.std(result_for_each_split,ddof=1)
         print("\nmean_"+key+":", mean_result)
         print("std_"+key+":", std_result)
-    
+        if num_folds_for_which_this_metric_was_undefined != 0:
+            print("the value of this metric was undefined for", num_folds_for_which_this_metric_was_undefined,
+                     "folds, and so the mean and standard deviation were calculated using the remaining",
+                         num_folds_for_nested_cv - num_folds_for_which_this_metric_was_undefined, "folds")
     num_decision_function_bins = len(decision_function_bin_bps) + 1
     test_frac_ground_truth_topological_for_each_decision_function_bin_for_each_split =\
                                                             np.zeros((num_folds_for_nested_cv,num_decision_function_bins))
@@ -285,6 +293,7 @@ def main():
     print("std_test_frac_ground_truth_topological_for_each_decision_function_bin:",
                                  std_test_frac_ground_truth_topological_for_each_decision_function_bin)
     
+    #selected value of hyperparameter for each split
     selected_gamma_for_each_split = np.zeros(num_folds_for_nested_cv)
     for i in range(num_folds_for_nested_cv):
         selected_gamma_for_each_split[i] = comprehensive_results_for_nested_cv[i]["gamma"]
@@ -299,15 +308,11 @@ def main():
     pickle.dump(median_selected_gamma, output_for_median_selected_gamma, pickle.HIGHEST_PROTOCOL)
     output_for_median_selected_gamma.close()
     
-    #ind we just need for plotting bar graph
+    #plotting the bar graph that shows the test topological fraction for each g(M) bin
     ind = np.arange(0,len(mean_test_frac_ground_truth_topological_for_each_decision_function_bin))
-
-    #the names of each bar in the bar graph
     tuple_of_decision_function_bin_strings = ('(-\u221E,-2)','[-2,-1.5)','[-1.5,-1)','[-1,-0.5)',
                                                   '[-0.5,0)','[0,0.5)','[0.5,1)','[1,1.5)','[1.5,2)','[2,\u221E)')
-    
     vertical_tick_marks = np.arange(0,1.1,0.1)
-    
     plt.figure(figsize=(15,7.5))
     plt.bar(ind, mean_test_frac_ground_truth_topological_for_each_decision_function_bin,
                         yerr=std_test_frac_ground_truth_topological_for_each_decision_function_bin, capsize=8)
