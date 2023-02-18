@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 import material_representation
 import chemistry
 
@@ -127,10 +128,15 @@ def compute_balanced_accuracy(ground_truth_labels, predicted_labels):
     
     num_true_positives, num_false_positives, num_false_negatives, num_true_negatives = compute_confusion_matrix(
                                                                                 ground_truth_labels, predicted_labels)
-    balanced_accuracy = 0.5 * num_true_positives / (num_true_positives + num_false_negatives) +\
-                            0.5 * num_true_negatives / (num_true_negatives + num_false_positives)
     
-    return balanced_accuracy
+    if (num_true_positives + num_false_negatives) == 0 or (num_true_negatives + num_false_positives) == 0:
+        warnings.simplefilter('always', UserWarning)
+        warnings.warn('balanced accuracy is not defined, so returned np.NaN')
+        return np.NaN
+    else:
+        balanced_accuracy = 0.5 * num_true_positives / (num_true_positives + num_false_negatives) +\
+                                0.5 * num_true_negatives / (num_true_negatives + num_false_positives)
+        return balanced_accuracy
 
 
 
@@ -172,7 +178,7 @@ def accuracy_for_materials_with_given_number_of_distinct_elements(list_of_materi
         predicted_labels_and_ground_truth_labels_for_materials_with_given_number_of_distinct_elements(list_of_material_dicts,
                                   clf, list_of_atomic_numbers_for_featurization, atomic_number_to_drop, num_distinct_elements)
     
-    accuracy_for_subset_with_given_number_of_distinct_elements, _, _, _ =\
-                    compute_all_metrics(ground_truth_labels_on_subset, predicted_labels_on_subset)
+    num_correct_classifications = np.sum(predicted_labels_on_subset == ground_truth_labels_on_subset)
+    accuracy_for_subset_with_given_number_of_distinct_elements = num_correct_classifications / len(predicted_labels_on_subset)
     
     return accuracy_for_subset_with_given_number_of_distinct_elements
